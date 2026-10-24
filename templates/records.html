@@ -7,43 +7,60 @@
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #0f172a; color: #f8fafc; margin: 0; padding: 30px; display: flex; justify-content: center; }
-        .container { max-width: 1100px; width: 100%; background: #1e293b; padding: 25px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .container { max-width: 1200px; width: 100%; background: #1e293b; padding: 25px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
         h1 { color: #38bdf8; margin: 0; font-size: 22px; display: flex; align-items: center; gap: 8px; }
-        .actions-group { display: flex; gap: 10px; }
+        .actions-group { display: flex; gap: 10px; align-items: center; }
         .btn-export { background: #059669; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn-export:hover { background: #047857; }
         .btn-back { background: #0284c7; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; }
         .btn-back:hover { background: #0369a1; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
-        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #334155; }
+        .badge-filter { background: #0369a1; color: #bae6fd; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 15px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #334155; vertical-align: middle; }
         th { background: #0f172a; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
         tr:hover { background: #1a2234; }
         .badge-score { background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block; }
         .badge-fail { background: #7f1d1d; color: #f87171; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block; }
+        .badge-room-tag { background: #334155; color: #94a3b8; padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
         .time { color: #94a3b8; font-size: 13px; }
         .btn-view { background: #334155; color: #38bdf8; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
         .btn-view:hover { background: #475569; color: white; }
         .empty { text-align: center; color: #64748b; padding: 40px; }
+        
+        /* Candidate Photo Thumbnail */
+        .photo-thumb { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; background: #090d16; cursor: pointer; transition: 0.2s; }
+        .photo-thumb:hover { transform: scale(1.1); }
+        .no-photo { width: 44px; height: 44px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #94a3b8; }
 
         /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); justify-content: center; align-items: center; }
-        .modal-content { background: #1e293b; padding: 25px; border-radius: 14px; width: 90%; max-width: 650px; border: 1px solid #475569; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-content { background: #1e293b; padding: 25px; border-radius: 14px; width: 90%; max-width: 650px; border: 1px solid #475569; max-height: 85vh; display: flex; flex-direction: column; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 12px; }
         .modal-header h3 { margin: 0; color: #38bdf8; font-size: 18px; }
         .close-btn { color: #94a3b8; font-size: 24px; font-weight: bold; cursor: pointer; border: none; background: none; }
         .close-btn:hover { color: white; }
         .modal-body { overflow-y: auto; margin-top: 15px; padding-right: 8px; font-size: 14px; line-height: 1.6; color: #e2e8f0; white-space: pre-wrap; background: #090d16; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
+        .modal-photo-row { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .modal-photo-row img { width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 2px solid #38bdf8; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header-row">
-        <h1>📋 Student Viva Evaluation Records</h1>
+        <div>
+            <h1>📋 Student Viva Evaluation Records</h1>
+            {% if room_filter %}
+            <p style="margin: 5px 0 0 0; font-size: 14px; color: #94a3b8;">
+                Filtering results for Exam Room: <span class="badge-filter">{{ room_filter }}</span>
+                <a href="/records" style="color: #38bdf8; font-size: 12px; margin-left: 10px; text-decoration: none;">(Show All Rooms)</a>
+            </p>
+            {% endif %}
+        </div>
         <div class="actions-group">
-            <a href="/export_csv" class="btn-export">📥 Download CSV / Excel</a>
-            <a href="/" class="btn-back">⬅ Back to Viva</a>
+            <a href="/export_csv{% if room_filter %}?room={{ room_filter }}{% endif %}" class="btn-export">📥 Download CSV / Excel</a>
+            <a href="/teacher/portal" class="btn-back">⬅ Teacher Portal</a>
         </div>
     </div>
 
@@ -51,6 +68,8 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Candidate</th>
+                <th>Room PIN</th>
                 <th>Student Name</th>
                 <th>Roll No</th>
                 <th>Score</th>
@@ -63,24 +82,38 @@
             {% for r in records %}
             <tr>
                 <td>#{{ r[0] }}</td>
+                <td>
+                    {% if r|length > 8 and r[8] %}
+                    <img src="{{ r[8] }}" class="photo-thumb" onclick="openTranscript(`{{ r[1] }}`, `{{ r[2] }}`, `{{ r[6] | replace('`', '\\`') }}`, `{{ r[8] }}`)" title="Click to view full photo">
+                    {% else %}
+                    <div class="no-photo">👤</div>
+                    {% endif %}
+                </td>
+                <td><span class="badge-room-tag">{{ r[7] if r|length > 7 else 'GLOBAL' }}</span></td>
                 <td><strong>{{ r[1] }}</strong></td>
                 <td>{{ r[2] }}</td>
                 <td>
-                    {% if '0.0' in r[3] or '2.5' in r[3] %}
+                    {% if 'Fail' in r[4] %}
                     <span class="badge-fail">{{ r[3] }}</span>
                     {% else %}
                     <span class="badge-score">{{ r[3] }}</span>
                     {% endif %}
                 </td>
-                <td>{{ r[4] }}</td>
+                <td>
+                    {% if 'Fail' in r[4] %}
+                    <span style="color: #f87171; font-weight: 600;">{{ r[4] }}</span>
+                    {% else %}
+                    <span style="color: #34d399; font-weight: 600;">{{ r[4] }}</span>
+                    {% endif %}
+                </td>
                 <td class="time">{{ r[5] }}</td>
                 <td>
-                    <button class="btn-view" onclick="openTranscript(`{{ r[1] }}`, `{{ r[2] }}`, `{{ r[6] | replace('`', '\\`') }}`)">🔍 View Q&A</button>
+                    <button class="btn-view" onclick="openTranscript(`{{ r[1] }}`, `{{ r[2] }}`, `{{ r[6] | replace('`', '\\`') }}`, `{{ r[8] if r|length > 8 else '' }}`)">🔍 View Q&A</button>
                 </td>
             </tr>
             {% else %}
             <tr>
-                <td colspan="7" class="empty">No examination records found in database.</td>
+                <td colspan="9" class="empty">No examination records found for this query.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -91,17 +124,31 @@
 <div class="modal" id="transcriptModal" onclick="closeOnOutside(event)">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="modalTitle">Full Viva Transcript</h3>
+            <h3 id="modalTitle">Candidate Viva Transcript</h3>
             <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-photo-row" id="modalPhotoContainer" style="display:none; margin-top: 15px;">
+            <img id="modalPhoto" src="" alt="Candidate Snapshot">
+            <span style="font-size: 13px; color: #94a3b8;">Captured Proctoring Photo<br><strong style="color: #38bdf8;">Verified at Examination Start</strong></span>
         </div>
         <div class="modal-body" id="modalBody"></div>
     </div>
 </div>
 
 <script>
-    function openTranscript(name, roll, transcriptText) {
+    function openTranscript(name, roll, transcriptText, photoUrl) {
         document.getElementById("modalTitle").innerText = `Transcript: ${name} (${roll})`;
         document.getElementById("modalBody").innerText = transcriptText || "No conversation transcript recorded.";
+        
+        const photoContainer = document.getElementById("modalPhotoContainer");
+        const modalImg = document.getElementById("modalPhoto");
+        if (photoUrl) {
+            modalImg.src = photoUrl;
+            photoContainer.style.display = "flex";
+        } else {
+            photoContainer.style.display = "none";
+        }
+        
         document.getElementById("transcriptModal").style.display = "flex";
     }
 

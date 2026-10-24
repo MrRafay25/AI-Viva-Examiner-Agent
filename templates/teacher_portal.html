@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Examination Portal - AI Viva SaaS</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0f172a; color: #f8fafc; margin: 0; padding: 25px; display: flex; justify-content: center; }
+        .container { max-width: 1050px; width: 100%; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #334155; padding-bottom: 15px; }
+        .header h1 { margin: 0; color: #38bdf8; font-size: 24px; }
+        .btn-link { color: #94a3b8; text-decoration: none; font-size: 14px; margin-left: 15px; }
+        .btn-link:hover { color: #38bdf8; }
+        
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+        .card h2 { margin-top: 0; color: #f1f5f9; font-size: 18px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
+        
+        .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .auth-grid { grid-template-columns: 1fr; } }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 5px; font-weight: 600; }
+        input[type="text"], input[type="email"], input[type="password"], input[type="file"] {
+            width: 100%; background: #090d16; border: 1px solid #334155; color: white; padding: 10px 12px; border-radius: 8px; font-size: 14px;
+        }
+        input:focus { outline: none; border-color: #38bdf8; }
+        
+        .btn-primary { background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; }
+        .btn-primary:hover { background: #0369a1; }
+        .btn-green { background: #059669; }
+        .btn-green:hover { background: #047857; }
+        
+        .alert { background: #7f1d1d; color: #fca5a5; padding: 10px 14px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
+        .alert-success { background: #064e3b; color: #6ee7b7; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+        th { background: #090d16; color: #94a3b8; }
+        .badge-room { background: #0369a1; color: #bae6fd; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 14px; font-weight: bold; }
+        .badge-active { background: #064e3b; color: #6ee7b7; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-inactive { background: #7f1d1d; color: #fca5a5; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-count { background: #334155; color: #f8fafc; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        
+        .btn-copy { background: #16a34a; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-copy:hover { background: #15803d; }
+        .btn-toggle { background: #475569; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; text-decoration: none; }
+        .btn-toggle:hover { background: #64748b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>🎓 Examiner & Teacher SaaS Portal</h1>
+        <div>
+            {% if session.get('teacher_id') %}
+            <span style="color: #94a3b8; font-size: 14px;">Logged in as: <strong style="color: #38bdf8;">{{ session.get('teacher_name') }}</strong></span>
+            <a href="/teacher/logout" class="btn-link" style="color: #f87171;">Logout</a>
+            {% else %}
+            <a href="/" class="btn-link">Student Viva Room</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="alert">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success">{{ success }}</div>
+    {% endif %}
+
+    {% if not session.get('teacher_id') %}
+    <!-- AUTHENTICATION VIEW -->
+    <div class="auth-grid">
+        <div class="card">
+            <h2>🔑 Teacher Login</h2>
+            <form action="/teacher/login" method="POST">
+                <div class="form-group">
+                    <label>Registered Email Address</label>
+                    <input type="email" name="email" required placeholder="teacher@university.edu.pk">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary">Sign In to Dashboard</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>📝 Register New Teacher Account</h2>
+            <form action="/teacher/register" method="POST">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" required placeholder="e.g., Prof. Muhammad Rafay">
+                </div>
+                <div class="form-group">
+                    <label>Official Email</label>
+                    <input type="email" name="email" required placeholder="your.name@college.edu.pk">
+                </div>
+                <div class="form-group">
+                    <label>Create Strong Password</label>
+                    <input type="password" name="password" required placeholder="Min 6 characters">
+                </div>
+                <button type="submit" class="btn-primary btn-green">Create Free Teacher Account</button>
+            </form>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- TEACHER DASHBOARD VIEW -->
+    <div class="card">
+        <h2>➕ Create New AI Exam Room (Generate WhatsApp Link)</h2>
+        <form action="/teacher/create_room" method="POST" enctype="multipart/form-data">
+            <div style="display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 15px; align-items: end;">
+                <div class="form-group" style="margin: 0;">
+                    <label>Course / Topic Name</label>
+                    <input type="text" name="topic_name" required placeholder="e.g., BSAI Mid-Term AI Viva">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Upload Syllabus PDF (English / Urdu)</label>
+                    <input type="file" name="pdf_file" accept=".pdf" required>
+                </div>
+                <button type="submit" class="btn-primary" style="height: 42px;">Generate Link</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>📋 Your Active Exam Rooms</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Room PIN</th>
+                    <th>Exam Topic</th>
+                    <th>Submissions</th>
+                    <th>Status</th>
+                    <th>Shareable Link</th>
+                    <th>Management Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for room in rooms %}
+                <tr>
+                    <td><span class="badge-room">{{ room[0] }}</span></td>
+                    <td><strong>{{ room[1] }}</strong></td>
+                    <td><span class="badge-count">{{ room[4] }} Students</span></td>
+                    <td>
+                        {% if room[3] == 1 %}
+                        <span class="badge-active">Active</span>
+                        {% else %}
+                        <span class="badge-inactive">Locked</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <input type="text" readonly id="link_{{ room[0] }}" value="{{ request.host_url }}exam/{{ room[0] }}" 
+                               style="width: 200px; padding: 4px 8px; font-size: 12px; background: #090d16; border: 1px solid #334155; color: #38bdf8; border-radius: 4px;">
+                    </td>
+                    <td style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-copy" onclick="copyLink('{{ room[0] }}', '{{ room[1] }}')">📲 WhatsApp</button>
+                        <a href="/teacher/toggle_room/{{ room[0] }}" class="btn-toggle">
+                            {% if room[3] == 1 %}🔒 Lock{% else %}🔓 Unlock{% endif %}
+                        </a>
+                        <a href="/records?room={{ room[0] }}" style="color: #38bdf8; font-size: 13px; font-weight: bold; text-decoration: none;">View Roster ➜</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #64748b; padding: 25px;">
+                        No exam rooms created yet. Upload a syllabus above to generate your first link!
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function copyLink(roomCode, topic) {
+        const linkInput = document.getElementById("link_" + roomCode);
+        const link = linkInput.value;
+        const msg = `📢 *${topic} - AI Oral Examination*\n\nStudents, your viva room is active. Click below to begin your evaluation:\n👉 ${link}\n\nExam Room PIN: *${roomCode}*`;
+        navigator.clipboard.writeText(msg).then(() => {
+            alert("WhatsApp invitation copied to clipboard!\nYou can now paste it into your class group.");
+        });
+    }
+</script>
+
+</body>
+</html>

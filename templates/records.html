@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examiner Dashboard - Saved Viva Records</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0f172a; color: #f8fafc; margin: 0; padding: 30px; display: flex; justify-content: center; }
+        .container { max-width: 1050px; width: 100%; background: #1e293b; padding: 25px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #38bdf8; margin-top: 0; display: flex; justify-content: space-between; align-items: center; font-size: 24px; }
+        .btn-back { background: #0284c7; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; }
+        .btn-back:hover { background: #0369a1; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 15px; }
+        th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #0f172a; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+        tr:hover { background: #1a2234; }
+        .badge-score { background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block; }
+        .time { color: #94a3b8; font-size: 13px; }
+        .btn-view { background: #334155; color: #38bdf8; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .btn-view:hover { background: #475569; color: white; }
+        .empty { text-align: center; color: #64748b; padding: 40px; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); justify-content: center; align-items: center; }
+        .modal-content { background: #1e293b; padding: 25px; border-radius: 14px; width: 90%; max-width: 650px; border: 1px solid #475569; max-height: 80vh; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 12px; }
+        .modal-header h3 { margin: 0; color: #38bdf8; font-size: 18px; }
+        .close-btn { color: #94a3b8; font-size: 24px; font-weight: bold; cursor: pointer; border: none; background: none; }
+        .close-btn:hover { color: white; }
+        .modal-body { overflow-y: auto; margin-top: 15px; padding-right: 8px; font-size: 14px; line-height: 1.6; color: #e2e8f0; white-space: pre-wrap; background: #090d16; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>
+        <span>📋 Student Viva Evaluation Records</span>
+        <a href="/" class="btn-back">⬅ Back to Viva</a>
+    </h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Student Name</th>
+                <th>Roll No</th>
+                <th>Score</th>
+                <th>Examiner Verdict</th>
+                <th>Timestamp</th>
+                <th>Transcript</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in records %}
+            <tr>
+                <td>#{{ r[0] }}</td>
+                <td><strong>{{ r[1] }}</strong></td>
+                <td>{{ r[2] }}</td>
+                <td><span class="badge-score">{{ r[3] }}</span></td>
+                <td>{{ r[4] }}</td>
+                <td class="time">{{ r[5] }}</td>
+                <td>
+                    <button class="btn-view" onclick="openTranscript(`{{ r[1] }}`, `{{ r[2] }}`, `{{ r[6] | replace('`', '\\`') }}`)">🔍 View Q&A</button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="empty">No examination records found in database.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal Popup -->
+<div class="modal" id="transcriptModal" onclick="closeOnOutside(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Full Viva Transcript</h3>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+    function openTranscript(name, roll, transcriptText) {
+        document.getElementById("modalTitle").innerText = `Transcript: ${name} (${roll})`;
+        document.getElementById("modalBody").innerText = transcriptText || "No conversation transcript recorded.";
+        document.getElementById("transcriptModal").style.display = "flex";
+    }
+
+    function closeModal() {
+        document.getElementById("transcriptModal").style.display = "none";
+    }
+
+    function closeOnOutside(e) {
+        if (e.target.id === "transcriptModal") closeModal();
+    }
+</script>
+
+</body>
+</html>

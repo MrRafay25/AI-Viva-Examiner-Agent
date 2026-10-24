@@ -7,15 +7,20 @@
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { background: #0f172a; color: #f8fafc; margin: 0; padding: 30px; display: flex; justify-content: center; }
-        .container { max-width: 1050px; width: 100%; background: #1e293b; padding: 25px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        h1 { color: #38bdf8; margin-top: 0; display: flex; justify-content: space-between; align-items: center; font-size: 24px; }
+        .container { max-width: 1100px; width: 100%; background: #1e293b; padding: 25px; border-radius: 16px; border: 1px solid #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        h1 { color: #38bdf8; margin: 0; font-size: 22px; display: flex; align-items: center; gap: 8px; }
+        .actions-group { display: flex; gap: 10px; }
+        .btn-export { background: #059669; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-export:hover { background: #047857; }
         .btn-back { background: #0284c7; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s; }
         .btn-back:hover { background: #0369a1; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
         th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #334155; }
         th { background: #0f172a; color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
         tr:hover { background: #1a2234; }
         .badge-score { background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block; }
+        .badge-fail { background: #7f1d1d; color: #f87171; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 13px; display: inline-block; }
         .time { color: #94a3b8; font-size: 13px; }
         .btn-view { background: #334155; color: #38bdf8; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
         .btn-view:hover { background: #475569; color: white; }
@@ -34,10 +39,13 @@
 <body>
 
 <div class="container">
-    <h1>
-        <span>📋 Student Viva Evaluation Records</span>
-        <a href="/" class="btn-back">⬅ Back to Viva</a>
-    </h1>
+    <div class="header-row">
+        <h1>📋 Student Viva Evaluation Records</h1>
+        <div class="actions-group">
+            <a href="/export_csv" class="btn-export">📥 Download CSV / Excel</a>
+            <a href="/" class="btn-back">⬅ Back to Viva</a>
+        </div>
+    </div>
 
     <table>
         <thead>
@@ -57,7 +65,13 @@
                 <td>#{{ r[0] }}</td>
                 <td><strong>{{ r[1] }}</strong></td>
                 <td>{{ r[2] }}</td>
-                <td><span class="badge-score">{{ r[3] }}</span></td>
+                <td>
+                    {% if '0.0' in r[3] or '2.5' in r[3] %}
+                    <span class="badge-fail">{{ r[3] }}</span>
+                    {% else %}
+                    <span class="badge-score">{{ r[3] }}</span>
+                    {% endif %}
+                </td>
                 <td>{{ r[4] }}</td>
                 <td class="time">{{ r[5] }}</td>
                 <td>

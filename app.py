@@ -1,13 +1,14 @@
 import os
 import io
 import re
+import csv
 import base64
 import sqlite3
 import random
 import traceback
 import requests
 from datetime import datetime
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 import PyPDF2
 from gtts import gTTS
 
@@ -74,7 +75,6 @@ Q3_POOL = [
     ("Epoch, Batch Size, aur Iteration ke darmiyan kya takneeki farq hota hai?", "ایپوک، بیچ سائز اور اِٹریشن میں کیا فرق ہے؟")
 ]
 
-# Strict Filter to Catch Begging, Ignorance, and Filler Bluffs
 BLUFF_PATTERNS = [
     r"(ni|nahi|nhi|na|not|dont|don't)\s*(ata|aata|aati|aate|pata|pta|maloom|malom|samajh|know|idea)",
     r"number\s*(de\s*do|dedo|chahiye|dein)",
@@ -95,7 +95,6 @@ def is_meaningful_answer(ans_text):
         if re.search(pattern, clean):
             return False
             
-    # Sirf 1, 2 ya 3 words hone par bhi reject
     if len(clean.split()) < 4:
         return False
         
@@ -157,6 +156,31 @@ def view_records():
     rows = cursor.fetchall()
     conn.close()
     return render_template("records.html", records=rows)
+
+# DIRECT CSV / EXCEL DOWNLOAD ROUTE
+@app.route("/export_csv")
+def export_csv():
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, student_name, roll_no, score, grade, created_at, transcript FROM viva_evaluations ORDER BY id ASC")
+    rows = cursor.fetchall()
+    conn.close()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Evaluation ID", "Student Name", "Roll Number", "Viva Score", "Grade / Verdict", "Timestamp", "Full Q&A Transcript"])
+    
+    for row in rows:
+        clean_row = list(row)
+        clean_row[6] = clean_row[6].replace("\n", " | ")
+        writer.writerow(clean_row)
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=viva_evaluations_report.csv"}
+    )
 
 @app.route("/start_viva", methods=["POST"])
 def start_viva():
@@ -271,19 +295,14 @@ def submit_answer():
             valid_answers = [ans for ans in all_answers if is_meaningful_answer(ans)]
             attempted_count = len(valid_answers)
 
-            # SCENARIO 1: AGAR KOI BHI ASLI TECHNICAL JAWAB NAHI DIYA (TUKKE, BLUFF YA BEGGING THI)
             if attempted_count == 0:
                 calc_score = "0.0"
                 calc_grade = "Fail (F Grade)"
                 calc_summary = "Student ne kisi bhi sawal ka theek technical jawab nahi diya. Sirf excuses aur irrelevant baatein ki gayin."
-
-            # SCENARIO 2: SIRF 1 VALID JAWAB
             elif attempted_count == 1:
                 calc_score = "2.5"
                 calc_grade = "Fail (F Grade)"
                 calc_summary = "Sirf 1 sawal par koshish ki gayi. Baqi 2 sawalat par koi technical concept provide nahi kiya gaya."
-
-            # SCENARIO 3: MULTIPLE ATTEMPTS (STRICT LLM EVALUATION)
             else:
                 eval_prompt = f"""
                 You are an uncompromising, strict university professor grading an oral viva exam.
@@ -292,7 +311,7 @@ def submit_answer():
                 {full_transcript}
 
                 Strict Grading Rules:
-                - If answers are empty fillers (like 'ahem role hota hai'), begging for marks, or technically incorrect, award ZERO marks.
+                - If answers are empty fillers, begging for marks, or technically incorrect, award ZERO marks.
                 - Only award marks above 5.0 if the student explained real definitions, equations, or mechanisms.
                 - If all answers are vague or wrong, give score 0.0 or maximum 2.0 (Fail).
 
